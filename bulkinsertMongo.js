@@ -101,7 +101,8 @@ const collection = db.collection(collectionname);
 
 server.get('/mongo/getall', async (req, res) => {
   const result = await collection.find().toArray();
-  res.json({ message: "Success", response: result });
+  // res.json({ message: "Success", response: result });
+  res.send(result);
 })
 
 
@@ -180,7 +181,7 @@ server.get('/mongo/getsummary/bycampaign', async (req, res) => {
 server.get("/mongo/getsummary/hourlyreport", async (req, res) => {
   try {
     const pipeline = [
-      { $match: matchCondition },
+   
       {
         $group: {
           _id: {
@@ -189,6 +190,7 @@ server.get("/mongo/getsummary/hourlyreport", async (req, res) => {
             day: { $dayOfMonth: "$date_time" },
             hour: { $hour: "$date_time" }
           },
+          hour : { $addToSet : "$date_time"},
           totalCalls: { $sum: 1 },
           totalHoldTime: { $sum: "$hold" },
           totalTalkTime: { $sum: "$callkey" },
@@ -201,7 +203,14 @@ server.get("/mongo/getsummary/hourlyreport", async (req, res) => {
         }
       },
       {
+        $sort: {
+          _id:1
+        }
+      },
+      {
         $project: {
+         _id: 0,
+         date: "$_id",
           totalCalls: 1,
           totalHoldTime: 1,
           totalTalkTime: 1,

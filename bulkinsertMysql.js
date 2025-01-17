@@ -1,5 +1,6 @@
 const mysql = require('mysql2/promise');
 const dotenv = require('dotenv');
+// const { bulkinsertion } = require('./utils'); // Import the function
 const { faker } = require('@faker-js/faker');
 const bodyParser = require('body-parser');
 
@@ -7,6 +8,7 @@ const restify = require('restify');
 const server = restify.createServer();
 server.use(bodyParser.json());
 
+const bulkinsertion = require('./utils');
 
 const { v4: uuidv4 } = require('uuid');
 dotenv.config();
@@ -14,11 +16,13 @@ dotenv.config();
 uuidv4();
 
 const db = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'bulkdata',
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'bulkdata',
 });
+
+
 
 // async function bulkinsertion() {
 //     try {
@@ -105,18 +109,19 @@ const db = mysql.createPool({
 
 // bulkinsertion();
 
-server.get('/mysql/getall', async(req, res) => {
-    let connection = await db.getConnection();
-    let [data] = await db.query(`SELECT * from reports limit 10000`);
-    connection.release();
-    res.json({ message: "Success", response: data });
+server.get('/mysql/getall', async (req, res) => {
+  let connection = await db.getConnection();
+  let [data] = await db.query(`SELECT * from reports limit 10000`);
+  connection.release();
+  // res.json({ message: "Success", response: data });
+  res.send(data);
 })
 
-server.get('/sql/getreport', async (req, res) => {
+server.get('/sql/getreport/bycampaign', async (req, res) => {
 
-    let connection = await db.getConnection();
+  let connection = await db.getConnection();
 
-    const [data] = await connection.query(`
+  const [data] = await connection.query(`
         SELECT 
           campaign_name, 
           COUNT(*) AS Total_Calls,
@@ -133,18 +138,18 @@ server.get('/sql/getreport', async (req, res) => {
         campaign_name
       `);
 
-    connection.release();
+  connection.release();
 
-    res.json({ message: "Success", response: data });
+  res.json({ message: "Success", response: data });
 
 })
 
 
 server.get('/sql/getreport/byprocess', async (req, res) => {
 
-    let connection = await db.getConnection();
+  let connection = await db.getConnection();
 
-    const [data] = await connection.query(`
+  const [data] = await connection.query(`
         SELECT 
           process_name, 
           COUNT(*) AS Total_Calls,
@@ -161,17 +166,18 @@ server.get('/sql/getreport/byprocess', async (req, res) => {
         process_name
       `);
 
-    connection.release();
+  connection.release();
 
-    res.json({ message: "Success", response: data });
+  res.json({ message: "Success", response: data });
 
 })
 
- // Hourly Report
- server.get("/mysql/hourlyReport", async (req, res) => {
-    let connection = await db.getConnection();
-    try {
-      let sql = `SELECT DATE_FORMAT(date_time, '%Y-%m-%d %H:00:00') as hour,
+// Hourly Report
+server.get("/mysql/hourlyReport", async (req, res) => {
+  let connection = await db.getConnection();
+  try {
+    
+    const [data] = await db.query(`SELECT DATE_FORMAT(date_time, '%Y-%m-%d %H:00:00') as hour,
         COUNT(*) as totalCalls, 
         SUM(hold) as totalHoldTime, 
         SUM(callkey) as totalTalkTime, 
@@ -181,19 +187,18 @@ server.get('/sql/getreport/byprocess', async (req, res) => {
         SUM(conference) as totalConferenceTime, 
         COUNT(DISTINCT process_name) as totalProcesses, 
         COUNT(DISTINCT campaign_name) as totalCampaigns 
-        FROM reports WHERE 1=1 `;
-    
-      sql += ` GROUP BY hour ORDER BY hour `;
-  
-      // Execute the query using the connection object
-      const [data] = await connection.query(sql);
-      res.send(200, { hourlyReport: data });
-    } catch (err) {
-      console.error(err);
-      res.send(500, { message: err.message });
-    }
-    connection.release();
-  });
+        FROM
+         reports WHERE 1=1
+         GROUP BY 
+         hour ORDER BY hour limit 1000` );
+
+       res.send(200, { response: data });
+  } catch (err) {
+    console.error(err);
+    res.send(500, { message: err.message });
+  }
+  connection.release();
+});
 
 
 const PORT = process.env.PORT;
