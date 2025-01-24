@@ -78,7 +78,7 @@ async function bulkinsertelastic() {
         dispose_time: Math.floor(Math.random() * 300000),
       };
       // Add the index operation and data to bulkData
-      bulkdata.push({ index: { _index: 'Vikashk21' } });
+      bulkdata.push({ index: { _index: 'vikashk21' } });
       bulkdata.push({ data });
 
     }
@@ -95,24 +95,8 @@ async function bulkinsertelastic() {
   }
 }
 
-// bulkinsertelastic();
+bulkinsertelastic();
 
-// server.get('/documents', async (req, res) => {
-//     try {
-//         const response = await elasticClient.search({
-//             index: 'vikask21',
-//             body: {
-//                 query: {
-//                     match_all: {}
-//                 },
-//                  // Limit to 10 documents for testing
-//             }
-//         });
-//         res.json({ response: response  });
-//     } catch (error) {
-//         res.json({ message: "Error retrieving documents", error: error.message });
-//     }
-// });
 
 
 
